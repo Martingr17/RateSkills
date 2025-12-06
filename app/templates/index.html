@@ -1,0 +1,3002 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система оценки компетенций</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ===== BASE STYLES ===== */
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-color: #f8fafc;
+            --dark-color: #1e293b;
+            --border-color: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --radius: 8px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark-color);
+            background-color: #f1f5f9;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 250px;
+            background: var(--dark-color);
+            color: white;
+            padding: 1.5rem 0;
+            transition: var(--transition);
+        }
+
+        .logo {
+            padding: 0 1.5rem 1.5rem;
+            border-bottom: 1px solid #334155;
+            margin-bottom: 1.5rem;
+        }
+
+        .logo h2 {
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .user-info {
+            padding: 0 1.5rem 1.5rem;
+            border-bottom: 1px solid #334155;
+            margin-bottom: 1.5rem;
+        }
+
+        .user-info h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .user-info .role-badge {
+            display: inline-block;
+            background: var(--primary-color);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-item:hover {
+            background: #334155;
+        }
+
+        .nav-item.active {
+            background: var(--primary-color);
+            border-left: 4px solid #93c5fd;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .notifications-btn {
+            position: relative;
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            color: var(--secondary-color);
+        }
+
+        .notifications-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger-color);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logout-btn {
+            background: var(--light-color);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .logout-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        /* ===== COMMON COMPONENTS ===== */
+        .page-title {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: var(--dark-color);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .btn {
+            padding: 0.5rem 1.25rem;
+            border-radius: var(--radius);
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-outline {
+            background: white;
+            border: 1px solid var(--border-color);
+            color: var(--dark-color);
+        }
+
+        .btn-outline:hover {
+            background: var(--light-color);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 1rem;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary-color);
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background: var(--light-color);
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-primary {
+            background: #dbeafe;
+            color: var(--primary-color);
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: var(--success-color);
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: var(--warning-color);
+        }
+
+        .rating-stars {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .star {
+            color: #e2e8f0;
+            cursor: pointer;
+            font-size: 1.25rem;
+            transition: var(--transition);
+        }
+
+        .star.active {
+            color: var(--warning-color);
+        }
+
+        .star:hover {
+            color: #fbbf24;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: white;
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--secondary-color);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 1rem;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .select-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 1rem;
+            background: white;
+        }
+
+        .filter-container {
+            background: var(--light-color);
+            padding: 1rem;
+            border-radius: var(--radius);
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+            margin-bottom: 1rem;
+        }
+
+        .filter-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* ===== LOGIN PAGE ===== */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .login-card {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            padding: 2.5rem;
+        }
+
+        .login-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--dark-color);
+        }
+
+        .login-error {
+            background: #fee2e2;
+            color: var(--danger-color);
+            padding: 0.75rem;
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        /* ===== SKILLS CATEGORIES ===== */
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .category-card {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid transparent;
+        }
+
+        .category-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-4px);
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .category-icon {
+            width: 50px;
+            height: 50px;
+            background: #dbeafe;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .category-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .category-skills {
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+        }
+
+        /* ===== SKILLS LIST ===== */
+        .skills-list {
+            list-style: none;
+        }
+
+        .skill-item {
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .skill-item:hover {
+            background: #f8fafc;
+        }
+
+        .skill-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .skill-name {
+            font-weight: 500;
+        }
+
+        .skill-rating {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .skill-expand {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            display: none;
+        }
+
+        .skill-expand.active {
+            display: block;
+        }
+
+        .rating-options {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .rating-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            background: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .rating-btn:hover {
+            background: var(--light-color);
+        }
+
+        .rating-btn.selected {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* ===== PROFILE ===== */
+        .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+        }
+
+        .profile-info h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-department {
+            color: var(--secondary-color);
+            font-size: 1.1rem;
+        }
+
+        .radar-container {
+            height: 400px;
+            margin-bottom: 2rem;
+        }
+
+        .skills-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .summary-item {
+            background: white;
+            padding: 1rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+        }
+
+        .summary-category {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        .summary-rating {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        /* ===== EMPLOYEES LIST ===== */
+        .employees-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .employee-card {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .employee-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #dbeafe;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .employee-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .employee-position {
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+        }
+
+        .employee-skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .employee-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .compare-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* ===== COMPARISON TABLE ===== */
+        .comparison-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .comparison-table-container {
+            overflow-x: auto;
+        }
+
+        .comparison-table {
+            min-width: 800px;
+        }
+
+        .comparison-table th {
+            position: sticky;
+            left: 0;
+            background: var(--light-color);
+            z-index: 1;
+        }
+
+        .comparison-table td:first-child {
+            position: sticky;
+            left: 0;
+            background: white;
+            z-index: 1;
+        }
+
+        .highlight-difference {
+            background: #fef3c7 !important;
+        }
+
+        /* ===== NOTIFICATIONS ===== */
+        .notifications-list {
+            list-style: none;
+        }
+
+        .notification-item {
+            padding: 1rem;
+            border-left: 4px solid transparent;
+            border-bottom: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .notification-item.unread {
+            background: #f0f9ff;
+            border-left-color: var(--primary-color);
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
+        .notification-title {
+            font-weight: 600;
+        }
+
+        .notification-time {
+            color: var(--secondary-color);
+            font-size: 0.875rem;
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        /* ===== ADMIN SKILLS MANAGEMENT ===== */
+        .skills-management-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .category-with-skills {
+            margin-bottom: 2rem;
+        }
+
+        .category-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .skills-in-category {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .skill-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 1rem;
+            position: relative;
+        }
+
+        .skill-card-actions {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0.25rem;
+            border-radius: 4px;
+        }
+
+        .edit-btn {
+            color: var(--warning-color);
+        }
+
+        .delete-btn {
+            color: var(--danger-color);
+        }
+
+        .action-btn:hover {
+            background: var(--light-color);
+        }
+
+        /* ===== RESPONSIVE DESIGN ===== */
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                padding: 1rem;
+            }
+
+            .nav-menu {
+                display: flex;
+                overflow-x: auto;
+                gap: 0.5rem;
+            }
+
+            .nav-item {
+                white-space: nowrap;
+                padding: 0.5rem 1rem;
+            }
+
+            .content-area {
+                padding: 1rem;
+            }
+
+            .filter-row {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .filter-row .form-group {
+                width: 100%;
+            }
+
+            .categories-grid,
+            .employees-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== UTILITY CLASSES ===== */
+        .d-none {
+            display: none !important;
+        }
+
+        .d-flex {
+            display: flex !important;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-muted {
+            color: var(--secondary-color);
+        }
+
+        .mt-1 { margin-top: 0.5rem; }
+        .mt-2 { margin-top: 1rem; }
+        .mt-3 { margin-top: 1.5rem; }
+        .mb-1 { margin-bottom: 0.5rem; }
+        .mb-2 { margin-bottom: 1rem; }
+        .mb-3 { margin-bottom: 1.5rem; }
+        .ml-auto { margin-left: auto; }
+        .w-100 { width: 100%; }
+    </style>
+</head>
+<body>
+    <!-- LOGIN PAGE -->
+    <div id="login-page" class="login-container">
+        <div class="login-card">
+            <h1 class="login-title">Система оценки компетенций</h1>
+            <div id="login-error" class="login-error">
+                Неверный логин или пароль
+            </div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label class="form-label" for="username">Логин</label>
+                    <input type="text" id="username" class="form-control" placeholder="Введите ваш логин" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="password">Пароль</label>
+                    <input type="password" id="password" class="form-control" placeholder="Введите ваш пароль" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Войти</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN APPLICATION -->
+    <div id="app" class="app-container d-none">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>SkillMatrix</h2>
+            </div>
+            <div class="user-info">
+                <h4 id="current-user-name">Иван Петров</h4>
+                <div id="current-user-role" class="role-badge">Сотрудник</div>
+            </div>
+            <ul class="nav-menu" id="nav-menu">
+                <!-- Navigation items will be dynamically populated based on role -->
+            </ul>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <!-- HEADER -->
+            <header class="header">
+                <div id="page-title" class="page-title">
+                    <i class="fas fa-home"></i>
+                    <span>Главная</span>
+                </div>
+                <div class="header-actions">
+                    <button class="notifications-btn" id="notifications-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notifications-count" id="notifications-count">0</span>
+                    </button>
+                    <button class="logout-btn" id="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Выйти
+                    </button>
+                </div>
+            </header>
+
+            <!-- CONTENT AREA (pages will be loaded here dynamically) -->
+            <div class="content-area" id="content-area">
+                <!-- Content will be dynamically loaded here -->
+                <div class="card">
+                    <h3>Добро пожаловать в систему оценки компетенций!</h3>
+                    <p class="mt-2">Выберите раздел в меню слева для начала работы.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL TEMPLATES -->
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="modal" id="rating-modal">
+            <div class="modal-header">
+                <h3>Оценка навыка</h3>
+                <button class="close-btn" id="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h4 id="modal-skill-name">JavaScript</h4>
+                <p class="text-muted">Выберите вашу оценку по шкале от 1 до 5</p>
+                <div class="rating-options mt-3">
+                    <button class="rating-btn" data-value="1">1</button>
+                    <button class="rating-btn" data-value="2">2</button>
+                    <button class="rating-btn" data-value="3">3</button>
+                    <button class="rating-btn" data-value="4">4</button>
+                    <button class="rating-btn" data-value="5">5</button>
+                </div>
+                <div class="mt-3">
+                    <p><strong>Описание уровней:</strong></p>
+                    <p>1 - Начальный уровень</p>
+                    <p>3 - Средний уровень, уверенное использование</p>
+                    <p>5 - Экспертный уровень, может обучать других</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancel-rating">Отмена</button>
+                <button class="btn btn-primary" id="save-rating" disabled>Сохранить оценку</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TEMPLATES FOR DYNAMIC CONTENT -->
+    <template id="category-card-template">
+        <div class="category-card" data-category-id="">
+            <div class="category-header">
+                <div class="category-icon">
+                    <i class="fas fa-code"></i>
+                </div>
+                <div>
+                    <div class="category-name">Категория</div>
+                    <div class="category-skills">10 навыков</div>
+                </div>
+            </div>
+            <div class="category-description">
+                Описание категории навыков
+            </div>
+        </div>
+    </template>
+
+    <template id="skill-item-template">
+        <li class="skill-item" data-skill-id="">
+            <div class="skill-header">
+                <div class="skill-name">Название навыка</div>
+                <div class="skill-rating">
+                    <span class="current-rating">0</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+            <div class="skill-expand">
+                <div class="rating-options">
+                    <button class="rating-btn" data-value="1">1</button>
+                    <button class="rating-btn" data-value="2">2</button>
+                    <button class="rating-btn" data-value="3">3</button>
+                    <button class="rating-btn" data-value="4">4</button>
+                    <button class="rating-btn" data-value="5">5</button>
+                </div>
+            </div>
+        </li>
+    </template>
+
+    <template id="employee-card-template">
+        <div class="employee-card" data-employee-id="">
+            <div class="employee-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <h3 class="employee-name">Имя Фамилия</h3>
+            <p class="employee-position">Должность</p>
+            <div class="employee-skills">
+                <span class="badge badge-primary">JavaScript</span>
+                <span class="badge badge-primary">React</span>
+            </div>
+            <div class="employee-actions">
+                <button class="btn btn-outline btn-sm view-profile-btn">Профиль</button>
+                <div class="compare-checkbox">
+                    <input type="checkbox" class="compare-checkbox-input">
+                    <span>Сравнить</span>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- JavaScript -->
+    <script>
+        // ===== APPLICATION STATE =====
+        let currentUser = null;
+        let currentPage = 'home';
+        let currentRole = 'employee';
+        let notifications = [];
+
+        // ===== ROLES CONFIGURATION =====
+        const roles = {
+            employee: {
+                name: 'Сотрудник',
+                pages: [
+                    { id: 'home', name: 'Главная', icon: 'fa-home' },
+                    { id: 'skills', name: 'Каталог навыков', icon: 'fa-list' },
+                    { id: 'profile', name: 'Мой профиль', icon: 'fa-user' },
+                    { id: 'required-skills', name: 'Обязательные навыки', icon: 'fa-check-circle' },
+                    { id: 'history', name: 'История изменений', icon: 'fa-history' },
+                    { id: 'notifications', name: 'Уведомления', icon: 'fa-bell' }
+                ]
+            },
+            manager: {
+                name: 'Руководитель',
+                pages: [
+                    { id: 'home', name: 'Главная', icon: 'fa-home' },
+                    { id: 'employees', name: 'Сотрудники отдела', icon: 'fa-users' },
+                    { id: 'compare', name: 'Сравнение сотрудников', icon: 'fa-chart-bar' },
+                    { id: 'manager-notifications', name: 'Уведомления', icon: 'fa-bell' }
+                ]
+            },
+            admin: {
+                name: 'Администратор',
+                pages: [
+                    { id: 'home', name: 'Главная', icon: 'fa-home' },
+                    { id: 'skills-management', name: 'Управление навыками', icon: 'fa-cogs' },
+                    { id: 'users-management', name: 'Управление сотрудниками', icon: 'fa-user-cog' },
+                    { id: 'reports', name: 'Отчеты', icon: 'fa-chart-pie' },
+                    { id: 'export', name: 'Экспорт данных', icon: 'fa-file-export' }
+                ]
+            }
+        };
+
+        // ===== MOCK DATA =====
+        const mockData = {
+            categories: [
+                { id: 1, name: 'Языки программирования', icon: 'fa-code', description: 'Основные языки программирования', skillCount: 8 },
+                { id: 2, name: 'Фреймворки', icon: 'fa-layer-group', description: 'Популярные фреймворки и библиотеки', skillCount: 6 },
+                { id: 3, name: 'Базы данных', icon: 'fa-database', description: 'Системы управления базами данных', skillCount: 5 },
+                { id: 4, name: 'Инструменты', icon: 'fa-tools', description: 'Инструменты разработки', skillCount: 7 },
+                { id: 5, name: 'Soft Skills', icon: 'fa-comments', description: 'Гибкие навыки', skillCount: 10 }
+            ],
+            skills: [
+                { id: 1, name: 'JavaScript', categoryId: 1, description: 'Язык программирования для веб-разработки' },
+                { id: 2, name: 'Python', categoryId: 1, description: 'Высокоуровневый язык программирования' },
+                { id: 3, name: 'React', categoryId: 2, description: 'Библиотека для создания пользовательских интерфейсов' },
+                { id: 4, name: 'Vue.js', categoryId: 2, description: 'Прогрессивный фреймворк для создания пользовательских интерфейсов' },
+                { id: 5, name: 'PostgreSQL', categoryId: 3, description: 'Реляционная система управления базами данных' },
+                { id: 6, name: 'Git', categoryId: 4, description: 'Система контроля версий' },
+                { id: 7, name: 'Коммуникация', categoryId: 5, description: 'Умение эффективно общаться в команде' },
+                { id: 8, name: 'Лидерство', categoryId: 5, description: 'Способность вести команду к достижению целей' }
+            ],
+            employees: [
+                { id: 1, name: 'Иван Петров', position: 'Frontend разработчик', department: 'Разработка', skills: [
+                    { skillId: 1, rating: 4, confirmed: true },
+                    { skillId: 3, rating: 5, confirmed: true },
+                    { skillId: 6, rating: 4, confirmed: false }
+                ]},
+                { id: 2, name: 'Мария Сидорова', position: 'Backend разработчик', department: 'Разработка', skills: [
+                    { skillId: 2, rating: 5, confirmed: true },
+                    { skillId: 5, rating: 4, confirmed: true },
+                    { skillId: 6, rating: 5, confirmed: true }
+                ]},
+                { id: 3, name: 'Алексей Иванов', position: 'Team Lead', department: 'Разработка', skills: [
+                    { skillId: 1, rating: 4, confirmed: true },
+                    { skillId: 2, rating: 4, confirmed: true },
+                    { skillId: 7, rating: 5, confirmed: true },
+                    { skillId: 8, rating: 5, confirmed: true }
+                ]}
+            ]
+        };
+
+        // ===== INITIALIZATION =====
+        document.addEventListener('DOMContentLoaded', function() {
+            // Login form submission
+            document.getElementById('login-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+
+                // Simple authentication logic
+                if (username && password) {
+                    // Determine role based on username (for demo)
+                    let role = 'employee';
+                    if (username.includes('manager')) role = 'manager';
+                    if (username.includes('admin')) role = 'admin';
+
+                    login(username, role);
+                } else {
+                    showLoginError();
+                }
+            });
+
+            // Logout button
+            document.getElementById('logout-btn').addEventListener('click', logout);
+
+            // Notifications button
+            document.getElementById('notifications-btn').addEventListener('click', function() {
+                navigateTo('notifications');
+            });
+
+            // Modal close buttons
+            document.getElementById('close-modal').addEventListener('click', closeModal);
+            document.getElementById('cancel-rating').addEventListener('click', closeModal);
+
+            // Rating modal buttons
+            const ratingBtns = document.querySelectorAll('.rating-btn');
+            ratingBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    selectRating(this.dataset.value);
+                });
+            });
+
+            // Initialize with employee view for demo
+            // login('demo_user', 'employee');
+        });
+
+        // ===== AUTHENTICATION =====
+        function login(username, role) {
+            currentUser = { username, role };
+            currentRole = role;
+
+            document.getElementById('login-page').classList.add('d-none');
+            document.getElementById('app').classList.remove('d-none');
+
+            updateUserInfo();
+            updateNavigation();
+            navigateTo('home');
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('app').classList.add('d-none');
+            document.getElementById('login-page').classList.remove('d-none');
+            document.getElementById('login-form').reset();
+        }
+
+        function showLoginError() {
+            document.getElementById('login-error').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('login-error').style.display = 'none';
+            }, 3000);
+        }
+
+        // ===== NAVIGATION =====
+        function updateNavigation() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = '';
+
+            const rolePages = roles[currentRole].pages;
+
+            rolePages.forEach(page => {
+                const li = document.createElement('li');
+                li.className = `nav-item ${currentPage === page.id ? 'active' : ''}`;
+                li.dataset.page = page.id;
+                li.innerHTML = `
+                    <i class="fas ${page.icon}"></i>
+                    <span>${page.name}</span>
+                `;
+                li.addEventListener('click', () => navigateTo(page.id));
+                navMenu.appendChild(li);
+            });
+        }
+
+        function updateUserInfo() {
+            document.getElementById('current-user-name').textContent =
+                currentUser.username.charAt(0).toUpperCase() + currentUser.username.slice(1);
+            document.getElementById('current-user-role').textContent = roles[currentRole].name;
+        }
+
+        function navigateTo(pageId) {
+            currentPage = pageId;
+            updateNavigation();
+            updatePageTitle(pageId);
+            loadPageContent(pageId);
+        }
+
+        function updatePageTitle(pageId) {
+            const pageTitle = document.getElementById('page-title');
+            const rolePages = roles[currentRole].pages;
+            const page = rolePages.find(p => p.id === pageId);
+
+            if (page) {
+                pageTitle.innerHTML = `
+                    <i class="fas ${page.icon}"></i>
+                    <span>${page.name}</span>
+                `;
+            }
+        }
+
+        // ===== PAGE CONTENT LOADING =====
+        function loadPageContent(pageId) {
+            const contentArea = document.getElementById('content-area');
+
+            switch(pageId) {
+                case 'home':
+                    loadHomePage(contentArea);
+                    break;
+                case 'skills':
+                    loadSkillsPage(contentArea);
+                    break;
+                case 'profile':
+                    loadProfilePage(contentArea);
+                    break;
+                case 'required-skills':
+                    loadRequiredSkillsPage(contentArea);
+                    break;
+                case 'employees':
+                    loadEmployeesPage(contentArea);
+                    break;
+                case 'compare':
+                    loadComparePage(contentArea);
+                    break;
+                case 'skills-management':
+                    loadSkillsManagementPage(contentArea);
+                    break;
+                case 'users-management':
+                    loadUsersManagementPage(contentArea);
+                    break;
+                case 'reports':
+                    loadReportsPage(contentArea);
+                    break;
+                case 'export':
+                    loadExportPage(contentArea);
+                    break;
+                case 'notifications':
+                case 'manager-notifications':
+                    loadNotificationsPage(contentArea);
+                    break;
+                case 'history':
+                    loadHistoryPage(contentArea);
+                    break;
+                default:
+                    contentArea.innerHTML = '<div class="card"><h3>Страница в разработке</h3></div>';
+            }
+        }
+
+        // ===== PAGE TEMPLATES =====
+        function loadHomePage(container) {
+            container.innerHTML = `
+                <div class="card">
+                    <h3>Добро пожаловать, ${currentUser.username}!</h3>
+                    <p class="mt-2">Вы вошли как ${roles[currentRole].name}.</p>
+
+                    ${currentRole === 'employee' ? `
+                    <div class="mt-3">
+                        <h4>Ваши задачи:</h4>
+                        <ul class="mt-1">
+                            <li>Оцените обязательные навыки для вашего отдела</li>
+                            <li>Обновите самооценку по актуальным навыкам</li>
+                            <li>Просмотрите ваш профиль компетенций</li>
+                        </ul>
+                    </div>
+                    ` : ''}
+
+                    ${currentRole === 'manager' ? `
+                    <div class="mt-3">
+                        <h4>Задачи руководителя:</h4>
+                        <ul class="mt-1">
+                            <li>Просмотр профилей сотрудников вашего отдела</li>
+                            <li>Подтверждение или корректировка оценок сотрудников</li>
+                            <li>Сравнение навыков нескольких сотрудников</li>
+                            <li>Поиск сотрудников по навыкам</li>
+                        </ul>
+                    </div>
+                    ` : ''}
+
+                    ${currentRole === 'admin' ? `
+                    <div class="mt-3">
+                        <h4>Задачи администратора:</h4>
+                        <ul class="mt-1">
+                            <li>Управление справочником навыков и категорий</li>
+                            <li>Создание и управление учетными записями сотрудников</li>
+                            <li>Просмотр сводных отчетов по отделам</li>
+                            <li>Экспорт данных в CSV</li>
+                        </ul>
+                    </div>
+                    ` : ''}
+                </div>
+
+                ${currentRole === 'employee' ? `
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h3 class="card-title">Быстрый доступ</h3>
+                    </div>
+                    <div class="skills-summary">
+                        <div class="summary-item">
+                            <div class="summary-category">Обязательные навыки</div>
+                            <div class="summary-rating">3/5</div>
+                            <div class="text-muted">Требуют оценки</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-category">Последняя оценка</div>
+                            <div class="summary-rating">2 дн. назад</div>
+                            <div class="text-muted">JavaScript: 4 → 5</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-category">Новые уведомления</div>
+                            <div class="summary-rating" id="home-notifications-count">0</div>
+                            <div class="text-muted">Требуют внимания</div>
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
+            `;
+        }
+
+        function loadSkillsPage(container) {
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Каталог навыков</h3>
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="skills-search" placeholder="Поиск навыка...">
+                        </div>
+                    </div>
+                    <div class="categories-grid" id="categories-container"></div>
+                </div>
+            `;
+
+            renderCategories();
+
+            // Add search functionality
+            document.getElementById('skills-search').addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                filterCategories(searchTerm);
+            });
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('categories-container');
+            container.innerHTML = '';
+
+            mockData.categories.forEach(category => {
+                const template = document.getElementById('category-card-template');
+                const card = template.content.cloneNode(true);
+
+                const categoryCard = card.querySelector('.category-card');
+                categoryCard.dataset.categoryId = category.id;
+                categoryCard.querySelector('.category-icon i').className = `fas ${category.icon}`;
+                categoryCard.querySelector('.category-name').textContent = category.name;
+                categoryCard.querySelector('.category-skills').textContent = `${category.skillCount} навыков`;
+                categoryCard.querySelector('.category-description').textContent = category.description;
+
+                categoryCard.addEventListener('click', function() {
+                    loadCategorySkills(category.id, category.name);
+                });
+
+                container.appendChild(card);
+            });
+        }
+
+        function filterCategories(searchTerm) {
+            const categories = document.querySelectorAll('.category-card');
+
+            categories.forEach(category => {
+                const name = category.querySelector('.category-name').textContent.toLowerCase();
+                const description = category.querySelector('.category-description').textContent.toLowerCase();
+
+                if (name.includes(searchTerm) || description.includes(searchTerm)) {
+                    category.style.display = 'block';
+                } else {
+                    category.style.display = 'none';
+                }
+            });
+        }
+
+        function loadCategorySkills(categoryId, categoryName) {
+            const contentArea = document.getElementById('content-area');
+
+            // Get skills for this category
+            const categorySkills = mockData.skills.filter(skill => skill.categoryId == categoryId);
+
+            contentArea.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h3 class="card-title">${categoryName}</h3>
+                            <p class="text-muted mt-1">${categorySkills.length} навыков</p>
+                        </div>
+                        <button class="btn btn-outline" id="back-to-categories">
+                            <i class="fas fa-arrow-left"></i> Назад к категориям
+                        </button>
+                    </div>
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="category-skills-search" placeholder="Поиск навыка в категории...">
+                    </div>
+                    <ul class="skills-list" id="skills-list"></ul>
+                </div>
+            `;
+
+            // Render skills
+            const skillsList = document.getElementById('skills-list');
+            categorySkills.forEach(skill => {
+                const template = document.getElementById('skill-item-template');
+                const item = template.content.cloneNode(true);
+
+                const skillItem = item.querySelector('.skill-item');
+                skillItem.dataset.skillId = skill.id;
+                skillItem.querySelector('.skill-name').textContent = skill.name;
+
+                // Add click handler for expanding rating options
+                skillItem.addEventListener('click', function(e) {
+                    if (!e.target.classList.contains('rating-btn')) {
+                        const expand = this.querySelector('.skill-expand');
+                        expand.classList.toggle('active');
+                    }
+                });
+
+                // Add rating button handlers
+                const ratingBtns = item.querySelectorAll('.rating-btn');
+                ratingBtns.forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const skillId = this.closest('.skill-item').dataset.skillId;
+                        const rating = this.dataset.value;
+                        setSkillRating(skillId, rating);
+
+                        // Update current rating display
+                        this.closest('.skill-item').querySelector('.current-rating').textContent = rating;
+
+                        // Mark selected button
+                        this.closest('.skill-expand').querySelectorAll('.rating-btn').forEach(b => {
+                            b.classList.remove('selected');
+                        });
+                        this.classList.add('selected');
+                    });
+                });
+
+                skillsList.appendChild(item);
+            });
+
+            // Back button
+            document.getElementById('back-to-categories').addEventListener('click', function() {
+                loadSkillsPage(contentArea);
+            });
+
+            // Search functionality
+            document.getElementById('category-skills-search').addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                filterSkillsInCategory(searchTerm);
+            });
+        }
+
+        function filterSkillsInCategory(searchTerm) {
+            const skills = document.querySelectorAll('#skills-list .skill-item');
+
+            skills.forEach(skill => {
+                const name = skill.querySelector('.skill-name').textContent.toLowerCase();
+
+                if (name.includes(searchTerm)) {
+                    skill.style.display = 'flex';
+                } else {
+                    skill.style.display = 'none';
+                }
+            });
+        }
+
+        function setSkillRating(skillId, rating) {
+            console.log(`Setting rating ${rating} for skill ${skillId}`);
+            // In a real app, this would send an API request
+            showNotification('Оценка сохранена', 'success');
+        }
+
+        function loadProfilePage(container) {
+            container.innerHTML = `
+                <div class="card">
+                    <div class="profile-header">
+                        <div class="profile-info">
+                            <h3>Профиль компетенций</h3>
+                            <p class="profile-department">Отдел: Разработка</p>
+                        </div>
+                        <button class="btn btn-primary" id="update-ratings-btn">
+                            <i class="fas fa-edit"></i> Обновить оценки
+                        </button>
+                    </div>
+
+                    <div class="radar-container">
+                        <div class="text-center">
+                            <h4>Радарная диаграмма компетенций</h4>
+                            <p class="text-muted mt-1">(В реальном приложении здесь будет диаграмма Chart.js)</p>
+                            <div style="height: 300px; background: #f8fafc; border-radius: var(--radius);
+                                       display: flex; align-items: center; justify-content: center; margin-top: 1rem;">
+                                <i class="fas fa-chart-radar" style="font-size: 3rem; color: var(--primary-color);"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="skills-summary mt-3">
+                        <div class="summary-item">
+                            <div class="summary-category">Языки программирования</div>
+                            <div class="summary-rating">4.2</div>
+                            <div class="text-muted">Средняя оценка</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-category">Фреймворки</div>
+                            <div class="summary-rating">4.5</div>
+                            <div class="text-muted">Средняя оценка</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-category">Soft Skills</div>
+                            <div class="summary-rating">3.8</div>
+                            <div class="text-muted">Средняя оценка</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <h4>Подробный список навыков</h4>
+                        <div class="table-container mt-2">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Навык</th>
+                                        <th>Категория</th>
+                                        <th>Ваша оценка</th>
+                                        <th>Статус</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>JavaScript</td>
+                                        <td>Языки программирования</td>
+                                        <td>
+                                            <div class="rating-stars">
+                                                ${generateStars(5, 4)}
+                                            </div>
+                                        </td>
+                                        <td><span class="badge badge-success">Подтверждено</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>React</td>
+                                        <td>Фреймворки</td>
+                                        <td>
+                                            <div class="rating-stars">
+                                                ${generateStars(5, 5)}
+                                            </div>
+                                        </td>
+                                        <td><span class="badge badge-success">Подтверждено</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Git</td>
+                                        <td>Инструменты</td>
+                                        <td>
+                                            <div class="rating-stars">
+                                                ${generateStars(5, 4)}
+                                            </div>
+                                        </td>
+                                        <td><span class="badge badge-warning">Ожидает подтверждения</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 text-center">
+                        <button class="btn btn-outline" id="view-history-btn">
+                            <i class="fas fa-history"></i> Просмотреть историю изменений
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Add event listeners
+            document.getElementById('update-ratings-btn').addEventListener('click', function() {
+                navigateTo('skills');
+            });
+
+            document.getElementById('view-history-btn').addEventListener('click', function() {
+                navigateTo('history');
+            });
+        }
+
+        function generateStars(total, filled) {
+            let stars = '';
+            for (let i = 1; i <= total; i++) {
+                stars += `<i class="fas fa-star star ${i <= filled ? 'active' : ''}"></i>`;
+            }
+            return stars;
+        }
+
+        function loadEmployeesPage(container) {
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Сотрудники отдела</h3>
+                        <button class="btn btn-primary" id="add-filter-btn">
+                            <i class="fas fa-filter"></i> Добавить фильтр
+                        </button>
+                    </div>
+
+                    <div id="filter-container" class="filter-container d-none">
+                        <div id="filter-rows"></div>
+                        <div class="filter-actions">
+                            <button class="btn btn-outline" id="add-another-filter">
+                                <i class="fas fa-plus"></i> Добавить еще фильтр
+                            </button>
+                            <div>
+                                <button class="btn btn-outline" id="clear-filters">Очистить</button>
+                                <button class="btn btn-primary" id="apply-filters">Поиск</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="search-box mt-3">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="employees-search" placeholder="Поиск сотрудника...">
+                    </div>
+
+                    <div class="employees-grid mt-3" id="employees-container"></div>
+
+                    <div id="comparison-panel" class="mt-3 d-none">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4 class="card-title">Выбраны для сравнения: <span id="selected-count">0</span></h4>
+                                <div>
+                                    <button class="btn btn-outline" id="clear-comparison">Очистить</button>
+                                    <button class="btn btn-primary" id="compare-selected" disabled>Сравнить сотрудников</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            renderEmployees();
+
+            // Event listeners
+            document.getElementById('add-filter-btn').addEventListener('click', function() {
+                const filterContainer = document.getElementById('filter-container');
+                filterContainer.classList.toggle('d-none');
+                if (!filterContainer.classList.contains('d-none')) {
+                    addFilterRow();
+                }
+            });
+
+            document.getElementById('add-another-filter').addEventListener('click', addFilterRow);
+            document.getElementById('clear-filters').addEventListener('click', clearFilters);
+            document.getElementById('apply-filters').addEventListener('click', applyFilters);
+            document.getElementById('employees-search').addEventListener('input', filterEmployees);
+            document.getElementById('clear-comparison').addEventListener('click', clearComparison);
+            document.getElementById('compare-selected').addEventListener('click', compareSelectedEmployees);
+        }
+
+        function renderEmployees() {
+            const container = document.getElementById('employees-container');
+            container.innerHTML = '';
+
+            mockData.employees.forEach(employee => {
+                const template = document.getElementById('employee-card-template');
+                const card = template.content.cloneNode(true);
+
+                const employeeCard = card.querySelector('.employee-card');
+                employeeCard.dataset.employeeId = employee.id;
+                employeeCard.querySelector('.employee-name').textContent = employee.name;
+                employeeCard.querySelector('.employee-position').textContent = employee.position;
+
+                // Skills badges
+                const skillsContainer = employeeCard.querySelector('.employee-skills');
+                skillsContainer.innerHTML = '';
+                employee.skills.forEach(skill => {
+                    const skillData = mockData.skills.find(s => s.id == skill.skillId);
+                    if (skillData) {
+                        const badge = document.createElement('span');
+                        badge.className = 'badge badge-primary';
+                        badge.textContent = skillData.name;
+                        skillsContainer.appendChild(badge);
+                    }
+                });
+
+                // View profile button
+                employeeCard.querySelector('.view-profile-btn').addEventListener('click', function() {
+                    viewEmployeeProfile(employee.id);
+                });
+
+                // Compare checkbox
+                const checkbox = employeeCard.querySelector('.compare-checkbox-input');
+                checkbox.addEventListener('change', function() {
+                    updateComparisonPanel();
+                });
+
+                container.appendChild(card);
+            });
+        }
+
+        function addFilterRow() {
+            const filterRows = document.getElementById('filter-rows');
+            const row = document.createElement('div');
+            row.className = 'filter-row';
+            row.innerHTML = `
+                <div class="form-group" style="flex: 2;">
+                    <label class="form-label">Навык</label>
+                    <select class="select-control filter-skill">
+                        <option value="">Выберите навык</option>
+                        ${mockData.skills.map(skill => `<option value="${skill.id}">${skill.name}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Условие</label>
+                    <select class="select-control filter-operator">
+                        <option value="=">Равно</option>
+                        <option value=">">Больше</option>
+                        <option value="<">Меньше</option>
+                        <option value=">=">Больше или равно</option>
+                        <option value="<=">Меньше или равно</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Оценка</label>
+                    <select class="select-control filter-value">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-danger filter-remove-btn" style="margin-top: 1.5rem;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+
+            filterRows.appendChild(row);
+
+            // Add remove button handler
+            row.querySelector('.filter-remove-btn').addEventListener('click', function() {
+                row.remove();
+            });
+        }
+
+        function clearFilters() {
+            document.getElementById('filter-rows').innerHTML = '';
+            renderEmployees();
+        }
+
+        function applyFilters() {
+            // In a real app, this would filter employees based on selected filters
+            console.log('Applying filters');
+            showNotification('Фильтры применены', 'success');
+        }
+
+        function filterEmployees(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const employees = document.querySelectorAll('.employee-card');
+
+            employees.forEach(employee => {
+                const name = employee.querySelector('.employee-name').textContent.toLowerCase();
+
+                if (name.includes(searchTerm)) {
+                    employee.style.display = 'block';
+                } else {
+                    employee.style.display = 'none';
+                }
+            });
+        }
+
+        function updateComparisonPanel() {
+            const selectedCheckboxes = document.querySelectorAll('.compare-checkbox-input:checked');
+            const selectedCount = selectedCheckboxes.length;
+            const comparisonPanel = document.getElementById('comparison-panel');
+            const compareBtn = document.getElementById('compare-selected');
+            const selectedCountSpan = document.getElementById('selected-count');
+
+            selectedCountSpan.textContent = selectedCount;
+
+            if (selectedCount > 0) {
+                comparisonPanel.classList.remove('d-none');
+            } else {
+                comparisonPanel.classList.add('d-none');
+            }
+
+            compareBtn.disabled = selectedCount < 2;
+        }
+
+        function clearComparison() {
+            document.querySelectorAll('.compare-checkbox-input').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            updateComparisonPanel();
+        }
+
+        function compareSelectedEmployees() {
+            navigateTo('compare');
+        }
+
+        function viewEmployeeProfile(employeeId) {
+            // In a real app, this would load the employee's profile
+            console.log(`Viewing profile for employee ${employeeId}`);
+
+            // For demo, show a modal or navigate to profile page
+            alert(`Просмотр профиля сотрудника ID: ${employeeId}\nВ реальном приложении здесь будет полный профиль с оценками`);
+        }
+
+        function loadComparePage(container) {
+            container.innerHTML = `
+                <div class="card">
+                    <div class="comparison-controls">
+                        <div>
+                            <h3 class="card-title">Сравнение сотрудников</h3>
+                            <p class="text-muted">Сравнение навыков выбранных сотрудников</p>
+                        </div>
+                        <div>
+                            <div class="form-group" style="display: inline-block; margin-right: 1rem;">
+                                <label class="form-label">
+                                    <input type="checkbox" id="show-differences"> Показать только различия
+                                </label>
+                            </div>
+                            <div class="search-box" style="display: inline-block; width: 300px;">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="comparison-search" placeholder="Поиск навыка...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="comparison-table-container">
+                        <table class="comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>Навык</th>
+                                    <th>Иван Петров</th>
+                                    <th>Мария Сидорова</th>
+                                    <th>Алексей Иванов</th>
+                                </tr>
+                            </thead>
+                            <tbody id="comparison-body">
+                                <!-- Comparison rows will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-3">
+                        <button class="btn btn-outline" onclick="navigateTo('employees')">
+                            <i class="fas fa-arrow-left"></i> Вернуться к списку сотрудников
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Populate comparison table
+            const comparisonBody = document.getElementById('comparison-body');
+            const allSkills = [...new Set(mockData.employees.flatMap(e => e.skills.map(s => s.skillId)))];
+
+            allSkills.forEach(skillId => {
+                const skill = mockData.skills.find(s => s.id == skillId);
+                if (skill) {
+                    const row = document.createElement('tr');
+                    let rowHTML = `<td><strong>${skill.name}</strong><br><small class="text-muted">${getCategoryName(skill.categoryId)}</small></td>`;
+
+                    mockData.employees.forEach(employee => {
+                        const employeeSkill = employee.skills.find(s => s.skillId == skillId);
+                        if (employeeSkill) {
+                            rowHTML += `<td>
+                                <div class="rating-stars">
+                                    ${generateStars(5, employeeSkill.rating)}
+                                </div>
+                                <small>${employeeSkill.confirmed ? 'Подтверждено' : 'Ожидает'}</small>
+                            </td>`;
+                        } else {
+                            rowHTML += '<td class="text-muted">—</td>';
+                        }
+                    });
+
+                    row.innerHTML = rowHTML;
+                    comparisonBody.appendChild(row);
+                }
+            });
+
+            // Add search functionality
+            document.getElementById('comparison-search').addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                filterComparisonRows(searchTerm);
+            });
+
+            // Add show differences functionality
+            document.getElementById('show-differences').addEventListener('change', function(e) {
+                toggleDifferences(e.target.checked);
+            });
+        }
+
+        function getCategoryName(categoryId) {
+            const category = mockData.categories.find(c => c.id == categoryId);
+            return category ? category.name : '';
+        }
+
+        function filterComparisonRows(searchTerm) {
+            const rows = document.querySelectorAll('#comparison-body tr');
+
+            rows.forEach(row => {
+                const skillName = row.querySelector('td:first-child strong').textContent.toLowerCase();
+
+                if (skillName.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function toggleDifferences(showOnlyDifferences) {
+            const rows = document.querySelectorAll('#comparison-body tr');
+
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                let allSame = true;
+                let firstValue = null;
+
+                // Skip first cell (skill name)
+                for (let i = 1; i < cells.length; i++) {
+                    const cell = cells[i];
+                    const stars = cell.querySelectorAll('.star.active');
+                    const rating = stars.length;
+
+                    if (firstValue === null) {
+                        firstValue = rating;
+                    } else if (rating !== firstValue && !cell.classList.contains('text-muted')) {
+                        allSame = false;
+                    }
+                }
+
+                if (showOnlyDifferences && allSame) {
+                    row.style.display = 'none';
+                } else {
+                    row.style.display = '';
+                }
+
+                // Highlight differences
+                if (!allSame) {
+                    row.classList.add('highlight-difference');
+                } else {
+                    row.classList.remove('highlight-difference');
+                }
+            });
+        }
+
+        function loadSkillsManagementPage(container) {
+            container.innerHTML = `
+                <div class="card">
+                    <div class="skills-management-header">
+                        <h3 class="card-title">Управление навыками и категориями</h3>
+                        <div>
+                            <button class="btn btn-primary" id="add-category-btn">
+                                <i class="fas fa-plus"></i> Добавить категорию
+                            </button>
+                            <button class="btn btn-success" id="add-skill-btn">
+                                <i class="fas fa-plus"></i> Добавить навык
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="admin-skills-search" placeholder="Поиск навыка или категории...">
+                    </div>
+
+                    <div id="categories-management-container">
+                        <!-- Categories with skills will be rendered here -->
+                    </div>
+                </div>
+            `;
+
+            renderCategoriesForManagement();
+
+            // Event listeners
+            document.getElementById('add-category-btn').addEventListener('click', showAddCategoryModal);
+            document.getElementById('add-skill-btn').addEventListener('click', showAddSkillModal);
+            document.getElementById('admin-skills-search').addEventListener('input', filterAdminSkills);
+        }
+
+        function renderCategoriesForManagement() {
+            const container = document.getElementById('categories-management-container');
+            container.innerHTML = '';
+
+            mockData.categories.forEach(category => {
+                const categorySkills = mockData.skills.filter(skill => skill.categoryId == category.id);
+
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'category-with-skills';
+                categoryDiv.innerHTML = `
+                    <div class="category-title">
+                        <span>
+                            <i class="fas ${category.icon}"></i> ${category.name}
+                            <small class="text-muted">(${categorySkills.length} навыков)</small>
+                        </span>
+                        <div>
+                            <button class="action-btn edit-btn edit-category-btn" data-id="${category.id}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn delete-btn delete-category-btn" data-id="${category.id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="skills-in-category" id="skills-${category.id}"></div>
+                `;
+
+                container.appendChild(categoryDiv);
+
+                // Render skills in this category
+                const skillsContainer = document.getElementById(`skills-${category.id}`);
+                categorySkills.forEach(skill => {
+                    const skillCard = document.createElement('div');
+                    skillCard.className = 'skill-card';
+                    skillCard.innerHTML = `
+                        <h4>${skill.name}</h4>
+                        <p class="text-muted">${skill.description}</p>
+                        <div class="skill-card-actions">
+                            <button class="action-btn edit-btn edit-skill-btn" data-id="${skill.id}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn delete-btn delete-skill-btn" data-id="${skill.id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    skillsContainer.appendChild(skillCard);
+                });
+
+                // Add event listeners for category buttons
+                categoryDiv.querySelector('.edit-category-btn').addEventListener('click', function() {
+                    editCategory(this.dataset.id);
+                });
+
+                categoryDiv.querySelector('.delete-category-btn').addEventListener('click', function() {
+                    deleteCategory(this.dataset.id);
+                });
+            });
+
+            // Add event listeners for skill buttons
+            document.querySelectorAll('.edit-skill-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    editSkill(this.dataset.id);
+                });
+            });
+
+            document.querySelectorAll('.delete-skill-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    deleteSkill(this.dataset.id);
+                });
+            });
+        }
+
+        function filterAdminSkills(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const categories = document.querySelectorAll('.category-with-skills');
+
+            categories.forEach(category => {
+                const categoryName = category.querySelector('.category-title span').textContent.toLowerCase();
+                const skills = category.querySelectorAll('.skill-card');
+                let categoryVisible = categoryName.includes(searchTerm);
+
+                skills.forEach(skill => {
+                    const skillName = skill.querySelector('h4').textContent.toLowerCase();
+                    const skillDesc = skill.querySelector('p').textContent.toLowerCase();
+
+                    if (skillName.includes(searchTerm) || skillDesc.includes(searchTerm)) {
+                        skill.style.display = 'block';
+                        categoryVisible = true;
+                    } else {
+                        skill.style.display = 'none';
+                    }
+                });
+
+                category.style.display = categoryVisible ? 'block' : 'none';
+            });
+        }
+
+        function showAddCategoryModal() {
+            // In a real app, this would show a modal for adding a category
+            alert('Модальное окно добавления категории\nВ реальном приложении здесь будет форма с полями:\n- Название категории\n- Выбор иконки (дополнительно)\n- Кнопка "Создать"');
+        }
+
+        function showAddSkillModal() {
+            // In a real app, this would show a modal for adding a skill
+            alert('Модальное окно добавления навыка\nВ реальном приложении здесь будет форма с полями:\n- Название навыка\n- Выбор категорий (мультивыбор)\n- Кнопка "Создать" (активна только при заполнении всех полей)');
+        }
+
+        function editCategory(categoryId) {
+            // In a real app, this would show an edit modal
+            alert(`Редактирование категории ID: ${categoryId}\nВ реальном приложении здесь будет форма редактирования с возможностью изменения названия и иконки.`);
+        }
+
+        function deleteCategory(categoryId) {
+            const category = mockData.categories.find(c => c.id == categoryId);
+            const categorySkills = mockData.skills.filter(skill => skill.categoryId == categoryId);
+
+            if (categorySkills.length === 0) {
+                if (confirm(`Вы уверены, что хотите удалить категорию "${category.name}"?`)) {
+                    console.log(`Deleting category ${categoryId}`);
+                    showNotification(`Категория "${category.name}" удалена`, 'success');
+                }
+            } else {
+                const skillsList = categorySkills.map(s => s.name).join(', ');
+                if (confirm(`В категории "${category.name}" есть навыки (${skillsList}). Вы уверены, что хотите удалить категорию? После удаления нужно будет выбрать новые категории для этих навыков.`)) {
+                    console.log(`Deleting category ${categoryId} with skills`);
+                    showNotification(`Категория "${category.name}" удалена. Теперь нужно выбрать новые категории для навыков.`, 'warning');
+                }
+            }
+        }
+
+        function editSkill(skillId) {
+            // In a real app, this would show an edit modal
+            alert(`Редактирование навыка ID: ${skillId}\nВ реальном приложении здесь будет форма редактирования с возможностью изменения названия и категорий.`);
+        }
+
+        function deleteSkill(skillId) {
+            const skill = mockData.skills.find(s => s.id == skillId);
+            if (skill && confirm(`Вы уверены, что хотите удалить навык "${skill.name}"?`)) {
+                console.log(`Deleting skill ${skillId}`);
+                showNotification(`Навык "${skill.name}" удален`, 'success');
+            }
+        }
+
+        function loadUsersManagementPage(container) {
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Управление сотрудниками</h3>
+                        <button class="btn btn-primary" id="create-employee-btn">
+                            <i class="fas fa-user-plus"></i> Создать сотрудника
+                        </button>
+                    </div>
+
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="users-search" placeholder="Поиск сотрудника...">
+                    </div>
+
+                    <div class="table-container mt-3">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ФИО</th>
+                                    <th>Должность</th>
+                                    <th>Отдел</th>
+                                    <th>Логин</th>
+                                    <th>Роль</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Иван Петров</td>
+                                    <td>Frontend разработчик</td>
+                                    <td>Разработка</td>
+                                    <td>ivan.petrov</td>
+                                    <td><span class="badge badge-primary">Сотрудник</span></td>
+                                    <td>
+                                        <button class="action-btn edit-btn">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="action-btn delete-btn">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Мария Сидорова</td>
+                                    <td>Backend разработчик</td>
+                                    <td>Разработка</td>
+                                    <td>maria.sidorova</td>
+                                    <td><span class="badge badge-primary">Сотрудник</span></td>
+                                    <td>
+                                        <button class="action-btn edit-btn">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="action-btn delete-btn">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Алексей Иванов</td>
+                                    <td>Team Lead</td>
+                                    <td>Разработка</td>
+                                    <td>alexey.ivanov</td>
+                                    <td><span class="badge badge-warning">Руководитель</span></td>
+                                    <td>
+                                        <button class="action-btn edit-btn">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="action-btn delete-btn">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Администратор Системы</td>
+                                    <td>HR специалист</td>
+                                    <td>HR</td>
+                                    <td>admin</td>
+                                    <td><span class="badge badge-success">Администратор</span></td>
+                                    <td>
+                                        <button class="action-btn edit-btn">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="action-btn delete-btn">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            // Event listeners
+            document.getElementById('create-employee-btn').addEventListener('click', showCreateEmployeeModal);
+            document.getElementById('users-search').addEventListener('input', filterUsers);
+
+            // Add event listeners to edit/delete buttons
+            document.querySelectorAll('.action-btn.edit-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    editUser(this.closest('tr'));
+                });
+            });
+
+            document.querySelectorAll('.action-btn.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    deleteUser(this.closest('tr'));
+                });
+            });
+        }
+
+        function filterUsers(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('tbody tr');
+
+            rows.forEach(row => {
+                const name = row.querySelector('td:first-child').textContent.toLowerCase();
+
+                if (name.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function showCreateEmployeeModal() {
+            // In a real app, this would show a modal for creating an employee
+            alert('Модальное окно создания сотрудника\nВ реальном приложении здесь будет форма с полями:\n- Имя (обязательно)\n- Фамилия (обязательно)\n- Должность\n- Отдел (выбор из списка)\n- Логин (обязательно)\n- Пароль (обязательно)\n- Кнопка "Сохранить" (активна только при заполнении всех обязательных полей)');
+        }
+
+        function editUser(row) {
+            const name = row.querySelector('td:first-child').textContent;
+            alert(`Редактирование сотрудника: ${name}\nВ реальном приложении здесь будет форма редактирования с полями для изменения данных сотрудника.`);
+        }
+
+        function deleteUser(row) {
+            const name = row.querySelector('td:first-child').textContent;
+            if (confirm(`Вы уверены, что хотите удалить сотрудника "${name}"?`)) {
+                console.log(`Deleting user: ${name}`);
+                showNotification(`Сотрудник "${name}" удален`, 'success');
+            }
+        }
+
+        function loadReportsPage(container) {
+            container.innerHTML = `
+                <div class="card">
+                    <h3 class="card-title">Сводный отчет по отделам</h3>
+
+                    <div class="form-group">
+                        <label class="form-label">Выберите отдел</label>
+                        <select class="select-control" id="department-select">
+                            <option value="">Все отделы</option>
+                            <option value="development">Разработка</option>
+                            <option value="hr">HR</option>
+                            <option value="sales">Продажи</option>
+                            <option value="marketing">Маркетинг</option>
+                        </select>
+                    </div>
+
+                    <div class="table-container mt-3">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Навык</th>
+                                    <th>Категория</th>
+                                    <th>Средняя оценка</th>
+                                    <th>Кол-во оценок</th>
+                                    <th>Лучший результат</th>
+                                    <th>Худший результат</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>JavaScript</td>
+                                    <td>Языки программирования</td>
+                                    <td>4.2</td>
+                                    <td>15</td>
+                                    <td>5 (3 чел.)</td>
+                                    <td>2 (1 чел.)</td>
+                                </tr>
+                                <tr>
+                                    <td>React</td>
+                                    <td>Фреймворки</td>
+                                    <td>4.5</td>
+                                    <td>12</td>
+                                    <td>5 (5 чел.)</td>
+                                    <td>3 (1 чел.)</td>
+                                </tr>
+                                <tr>
+                                    <td>Коммуникация</td>
+                                    <td>Soft Skills</td>
+                                    <td>3.8</td>
+                                    <td>20</td>
+                                    <td>5 (2 чел.)</td>
+                                    <td>2 (3 чел.)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-3 text-center">
+                        <button class="btn btn-primary" id="export-report-btn">
+                            <i class="fas fa-file-export"></i> Экспорт в CSV
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Event listeners
+            document.getElementById('department-select').addEventListener('change', function() {
+                loadReportData(this.value);
+            });
+
+            document.getElementById('export-report-btn').addEventListener('click', function() {
+                exportReportToCSV();
+            });
+        }
+
+        function loadReportData(department) {
+            console.log(`Loading report for department: ${department}`);
+            // In a real app, this would load report data from the server
+        }
+
+        function exportReportToCSV() {
+            console.log('Exporting report to CSV');
+            showNotification('Отчет экспортирован в CSV', 'success');
+        }
+
+        function loadExportPage(container) {
+            container.innerHTML = `
+                <div class="card">
+                    <h3 class="card-title">Экспорт данных</h3>
+                    <p class="text-muted">Выберите тип данных для экспорта в CSV формат</p>
+
+                    <div class="skills-summary mt-3">
+                        <div class="summary-item" style="cursor: pointer;" id="export-employees">
+                            <div class="summary-category">
+                                <i class="fas fa-users fa-2x"></i>
+                            </div>
+                            <div class="summary-rating">Сотрудники</div>
+                            <div class="text-muted">Экспорт списка сотрудников</div>
+                        </div>
+                        <div class="summary-item" style="cursor: pointer;" id="export-skills">
+                            <div class="summary-category">
+                                <i class="fas fa-list fa-2x"></i>
+                            </div>
+                            <div class="summary-rating">Навыки</div>
+                            <div class="text-muted">Экспорт справочника навыков</div>
+                        </div>
+                        <div class="summary-item" style="cursor: pointer;" id="export-ratings">
+                            <div class="summary-category">
+                                <i class="fas fa-star fa-2x"></i>
+                            </div>
+                            <div class="summary-rating">Оценки</div>
+                            <div class="text-muted">Экспорт всех оценок</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <h4>Настройки экспорта</h4>
+                        <div class="form-group mt-2">
+                            <label class="form-label">
+                                <input type="checkbox" id="include-headers" checked> Включать заголовки столбцов
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <input type="checkbox" id="separate-sheets"> Разделять данные по листам (если применимо)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 text-center">
+                        <button class="btn btn-primary" id="start-export-btn">
+                            <i class="fas fa-download"></i> Начать экспорт
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Event listeners
+            document.getElementById('export-employees').addEventListener('click', function() {
+                selectExportType('employees');
+            });
+
+            document.getElementById('export-skills').addEventListener('click', function() {
+                selectExportType('skills');
+            });
+
+            document.getElementById('export-ratings').addEventListener('click', function() {
+                selectExportType('ratings');
+            });
+
+            document.getElementById('start-export-btn').addEventListener('click', startExport);
+        }
+
+        function selectExportType(type) {
+            // Highlight selected export type
+            document.querySelectorAll('.summary-item').forEach(item => {
+                item.style.borderColor = 'var(--border-color)';
+            });
+
+            document.getElementById(`export-${type}`).style.borderColor = 'var(--primary-color)';
+
+            console.log(`Selected export type: ${type}`);
+        }
+
+        function startExport() {
+            console.log('Starting export with options:', {
+                includeHeaders: document.getElementById('include-headers').checked,
+                separateSheets: document.getElementById('separate-sheets').checked
+            });
+
+            showNotification('Экспорт данных начат. Файл будет скачан автоматически.', 'success');
+        }
+
+        function loadNotificationsPage(container) {
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Уведомления</h3>
+                        <button class="btn btn-outline" id="mark-all-read-btn">
+                            <i class="fas fa-check-double"></i> Отметить все как прочитанные
+                        </button>
+                    </div>
+
+                    <div class="notifications-list" id="notifications-list">
+                        <div class="notification-item unread">
+                            <div class="notification-header">
+                                <div class="notification-title">Оценка подтверждена</div>
+                                <div class="notification-time">2 часа назад</div>
+                            </div>
+                            <p>Ваша оценка навыка "JavaScript" (5 баллов) была подтверждена руководителем.</p>
+                        </div>
+                        <div class="notification-item unread">
+                            <div class="notification-header">
+                                <div class="notification-title">Требуется оценка</div>
+                                <div class="notification-time">Вчера</div>
+                            </div>
+                            <p>У вас есть 3 обязательных навыка, требующих оценки.</p>
+                            <div class="notification-actions">
+                                <button class="btn btn-sm btn-primary">Перейти к оценке</button>
+                            </div>
+                        </div>
+                        <div class="notification-item">
+                            <div class="notification-header">
+                                <div class="notification-title">Оценка скорректирована</div>
+                                <div class="notification-time">3 дня назад</div>
+                            </div>
+                            <p>Руководитель скорректировал вашу оценку навыка "Git" с 5 до 4 баллов.</p>
+                        </div>
+                        ${currentRole === 'manager' ? `
+                        <div class="notification-item unread">
+                            <div class="notification-header">
+                                <div class="notification-title">Новая оценка сотрудника</div>
+                                <div class="notification-time">10 минут назад</div>
+                            </div>
+                            <p>Иван Петров поставил себе оценку 4 по навыку "React".</p>
+                            <div class="notification-actions">
+                                <button class="btn btn-sm btn-success">Подтвердить</button>
+                                <button class="btn btn-sm btn-warning">Скорректировать</button>
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            // Update notifications count
+            updateNotificationsCount();
+
+            // Event listeners
+            document.getElementById('mark-all-read-btn').addEventListener('click', function() {
+                markAllNotificationsRead();
+            });
+        }
+
+        function loadRequiredSkillsPage(container) {
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Обязательные навыки для вашего отдела</h3>
+                        <p class="text-muted">Пожалуйста, оцените эти навыки для завершения первоначальной настройки профиля</p>
+                    </div>
+
+                    <ul class="skills-list" id="required-skills-list">
+                        <li class="skill-item">
+                            <div class="skill-header">
+                                <div class="skill-name">JavaScript</div>
+                                <div class="skill-rating">
+                                    <span class="current-rating">Не оценено</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                            <div class="skill-expand">
+                                <div class="rating-options">
+                                    <button class="rating-btn" data-value="1">1</button>
+                                    <button class="rating-btn" data-value="2">2</button>
+                                    <button class="rating-btn" data-value="3">3</button>
+                                    <button class="rating-btn" data-value="4">4</button>
+                                    <button class="rating-btn" data-value="5">5</button>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="skill-item">
+                            <div class="skill-header">
+                                <div class="skill-name">React</div>
+                                <div class="skill-rating">
+                                    <span class="current-rating">Не оценено</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                            <div class="skill-expand">
+                                <div class="rating-options">
+                                    <button class="rating-btn" data-value="1">1</button>
+                                    <button class="rating-btn" data-value="2">2</button>
+                                    <button class="rating-btn" data-value="3">3</button>
+                                    <button class="rating-btn" data-value="4">4</button>
+                                    <button class="rating-btn" data-value="5">5</button>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="skill-item">
+                            <div class="skill-header">
+                                <div class="skill-name">Git</div>
+                                <div class="skill-rating">
+                                    <span class="current-rating">Не оценено</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                            <div class="skill-expand">
+                                <div class="rating-options">
+                                    <button class="rating-btn" data-value="1">1</button>
+                                    <button class="rating-btn" data-value="2">2</button>
+                                    <button class="rating-btn" data-value="3">3</button>
+                                    <button class="rating-btn" data-value="4">4</button>
+                                    <button class="rating-btn" data-value="5">5</button>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <div class="mt-3 text-center">
+                        <button class="btn btn-primary" id="complete-required-skills" disabled>
+                            <i class="fas fa-check"></i> Завершить оценку обязательных навыков
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Add event listeners for skill items
+            document.querySelectorAll('#required-skills-list .skill-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    if (!e.target.classList.contains('rating-btn')) {
+                        const expand = this.querySelector('.skill-expand');
+                        expand.classList.toggle('active');
+                    }
+                });
+
+                // Add rating button handlers
+                const ratingBtns = item.querySelectorAll('.rating-btn');
+                ratingBtns.forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const skillName = this.closest('.skill-item').querySelector('.skill-name').textContent;
+                        const rating = this.dataset.value;
+
+                        // Update current rating display
+                        this.closest('.skill-item').querySelector('.current-rating').textContent = rating;
+
+                        // Mark selected button
+                        this.closest('.skill-expand').querySelectorAll('.rating-btn').forEach(b => {
+                            b.classList.remove('selected');
+                        });
+                        this.classList.add('selected');
+
+                        // Check if all required skills are rated
+                        checkRequiredSkillsCompletion();
+                    });
+                });
+            });
+
+            // Complete button
+            document.getElementById('complete-required-skills').addEventListener('click', function() {
+                completeRequiredSkills();
+            });
+        }
+
+        function checkRequiredSkillsCompletion() {
+            const allRated = Array.from(document.querySelectorAll('#required-skills-list .current-rating'))
+                .every(rating => rating.textContent !== 'Не оценено');
+
+            document.getElementById('complete-required-skills').disabled = !allRated;
+        }
+
+        function completeRequiredSkills() {
+            console.log('Completing required skills assessment');
+            showNotification('Оценка обязательных навыков завершена!', 'success');
+            navigateTo('profile');
+        }
+
+        function loadHistoryPage(container) {
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">История изменений оценок</h3>
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="history-search" placeholder="Поиск по навыку...">
+                        </div>
+                    </div>
+
+                    <div class="filter-row mt-3">
+                        <div class="form-group">
+                            <label class="form-label">Период</label>
+                            <select class="select-control" id="history-period">
+                                <option value="all">За все время</option>
+                                <option value="month">За последний месяц</option>
+                                <option value="week">За последнюю неделю</option>
+                                <option value="today">Сегодня</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Навык</label>
+                            <select class="select-control" id="history-skill">
+                                <option value="">Все навыки</option>
+                                ${mockData.skills.map(skill => `<option value="${skill.id}">${skill.name}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Тип изменения</label>
+                            <select class="select-control" id="history-type">
+                                <option value="">Все изменения</option>
+                                <option value="self">Самооценка</option>
+                                <option value="manager">Корректировка руководителя</option>
+                                <option value="confirm">Подтверждение</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-container mt-3">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Дата</th>
+                                    <th>Навык</th>
+                                    <th>Старая оценка</th>
+                                    <th>Новая оценка</th>
+                                    <th>Изменение</th>
+                                    <th>Тип</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>15.05.2023 14:30</td>
+                                    <td>JavaScript</td>
+                                    <td>
+                                        <div class="rating-stars">
+                                            ${generateStars(5, 4)}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="rating-stars">
+                                            ${generateStars(5, 5)}
+                                        </div>
+                                    </td>
+                                    <td><span class="badge badge-success">+1</span></td>
+                                    <td>Самооценка</td>
+                                </tr>
+                                <tr>
+                                    <td>10.05.2023 11:15</td>
+                                    <td>Git</td>
+                                    <td>
+                                        <div class="rating-stars">
+                                            ${generateStars(5, 5)}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="rating-stars">
+                                            ${generateStars(5, 4)}
+                                        </div>
+                                    </td>
+                                    <td><span class="badge badge-danger">-1</span></td>
+                                    <td>Корректировка руководителя</td>
+                                </tr>
+                                <tr>
+                                    <td>05.05.2023 09:45</td>
+                                    <td>React</td>
+                                    <td>
+                                        <div class="rating-stars">
+                                            ${generateStars(5, 0)}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="rating-stars">
+                                            ${generateStars(5, 5)}
+                                        </div>
+                                    </td>
+                                    <td><span class="badge badge-success">+5</span></td>
+                                    <td>Самооценка</td>
+                                </tr>
+                                <tr>
+                                    <td>01.05.2023 16:20</td>
+                                    <td>React</td>
+                                    <td>
+                                        <div class="rating-stars">
+                                            ${generateStars(5, 5)}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="rating-stars">
+                                            ${generateStars(5, 5)}
+                                        </div>
+                                    </td>
+                                    <td><span class="badge badge-primary">0</span></td>
+                                    <td>Подтверждение</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            // Event listeners for filters
+            document.getElementById('history-period').addEventListener('change', filterHistory);
+            document.getElementById('history-skill').addEventListener('change', filterHistory);
+            document.getElementById('history-type').addEventListener('change', filterHistory);
+            document.getElementById('history-search').addEventListener('input', filterHistory);
+        }
+
+        function filterHistory() {
+            console.log('Filtering history...');
+            // In a real app, this would filter the history table
+        }
+
+        // ===== MODAL FUNCTIONS =====
+        function openRatingModal(skillName) {
+            const modal = document.getElementById('rating-modal');
+            const overlay = document.getElementById('modal-overlay');
+
+            document.getElementById('modal-skill-name').textContent = skillName;
+            overlay.style.display = 'flex';
+
+            // Reset rating buttons
+            modal.querySelectorAll('.rating-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+
+            document.getElementById('save-rating').disabled = true;
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').style.display = 'none';
+        }
+
+        function selectRating(value) {
+            const modal = document.getElementById('rating-modal');
+
+            // Mark selected button
+            modal.querySelectorAll('.rating-btn').forEach(btn => {
+                btn.classList.remove('selected');
+                if (btn.dataset.value === value) {
+                    btn.classList.add('selected');
+                }
+            });
+
+            document.getElementById('save-rating').disabled = false;
+        }
+
+        // ===== NOTIFICATION FUNCTIONS =====
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification-item unread`;
+            notification.innerHTML = `
+                <div class="notification-header">
+                    <div class="notification-title">Уведомление</div>
+                    <div class="notification-time">Только что</div>
+                </div>
+                <p>${message}</p>
+            `;
+
+            // Add to notifications list if visible
+            const notificationsList = document.getElementById('notifications-list');
+            if (notificationsList) {
+                notificationsList.prepend(notification);
+                updateNotificationsCount();
+            }
+
+            // Show toast notification
+            showToast(message, type);
+        }
+
+        function showToast(message, type) {
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${getColorByType(type)};
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: var(--radius);
+                box-shadow: var(--shadow);
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+            `;
+
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            // Remove toast after 3 seconds
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 3000);
+        }
+
+        function getColorByType(type) {
+            switch(type) {
+                case 'success': return 'var(--success-color)';
+                case 'warning': return 'var(--warning-color)';
+                case 'danger': return 'var(--danger-color)';
+                default: return 'var(--primary-color)';
+            }
+        }
+
+        function updateNotificationsCount() {
+            const unreadCount = document.querySelectorAll('.notification-item.unread').length;
+            document.getElementById('notifications-count').textContent = unreadCount;
+
+            // Update count in home page if exists
+            const homeCount = document.getElementById('home-notifications-count');
+            if (homeCount) {
+                homeCount.textContent = unreadCount;
+            }
+        }
+
+        function markAllNotificationsRead() {
+            document.querySelectorAll('.notification-item.unread').forEach(item => {
+                item.classList.remove('unread');
+            });
+            updateNotificationsCount();
+            showNotification('Все уведомления отмечены как прочитанные', 'success');
+        }
+
+        // ===== ADD CSS ANIMATIONS =====
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+
+            .toast-success { background: var(--success-color) !important; }
+            .toast-warning { background: var(--warning-color) !important; }
+            .toast-danger { background: var(--danger-color) !important; }
+            .toast-info { background: var(--primary-color) !important; }
+        `;
+        document.head.appendChild(style);
+
+        // Initialize the app with employee view for demo
+        // Uncomment the line below to start with a logged-in user for demo purposes
+        // setTimeout(() => login('demo_user', 'employee'), 100);
+    </script>
+</body>
+</html>
