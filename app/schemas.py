@@ -1,18 +1,30 @@
+"""
+Схемы для валидации данных
+"""
+
 from marshmallow import Schema, fields, validate, validates_schema, ValidationError
-from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
-from .models import *
-from .utils.validation import validate_email, validate_phone
+from .models import db, User, Department, Skill, UserSkillRating
+from datetime import datetime
+
+
+# Простые функции валидации
+def validate_email(email):
+    if not email:
+        return False
+    return '@' in email and '.' in email.split('@')[1]
+
+def validate_phone(phone):
+    if not phone:
+        return True
+    phone_str = str(phone)
+    digits = ''.join(filter(str.isdigit, phone_str))
+    return len(digits) >= 10
+
 
 class LoginSchema(Schema):
     """Схема для входа в систему"""
     username = fields.String(required=True, validate=validate.Length(min=3, max=64))
     password = fields.String(required=True, validate=validate.Length(min=6))
-    
-    @validates_schema
-    def validate_credentials(self, data, **kwargs):
-        """Дополнительная валидация"""
-        if not data.get('username') or not data.get('password'):
-            raise ValidationError('Username and password are required')
 
 
 class UserCreateSchema(Schema):
@@ -31,8 +43,8 @@ class UserCreateSchema(Schema):
     role = fields.String(validate=validate.OneOf(['employee', 'manager', 'admin']))
     department_id = fields.Integer()
     manager_id = fields.Integer()
-    phone = fields.String(validate=[validate.Length(max=20), validate_phone])
-    
+    phone = fields.String(validate=[validate.Length(max=20)])
+
     @validates_schema
     def validate_passwords(self, data, **kwargs):
         """Проверка совпадения паролей"""
@@ -50,7 +62,7 @@ class UserUpdateSchema(Schema):
     role = fields.String(validate=validate.OneOf(['employee', 'manager', 'admin']))
     department_id = fields.Integer()
     manager_id = fields.Integer()
-    phone = fields.String(validate=[validate.Length(max=20), validate_phone])
+    phone = fields.String(validate=[validate.Length(max=20)])
     is_active = fields.Boolean()
     avatar_url = fields.Url()
 
@@ -90,7 +102,7 @@ class RatingCreateSchema(Schema):
     skill_id = fields.Integer(required=True)
     self_score = fields.Integer(required=True, validate=validate.Range(min=1, max=5))
     notes = fields.String(validate=validate.Length(max=1000))
-    
+
     @validates_schema
     def validate_score(self, data, **kwargs):
         """Валидация оценки"""
@@ -143,7 +155,7 @@ class EmployeeFilterSchema(Schema):
         required=True,
         validate=validate.Length(min=1, max=10)
     )
-    
+
     @validates_schema
     def validate_skills(self, data, **kwargs):
         """Валидация фильтра навыков"""
@@ -154,11 +166,11 @@ class EmployeeFilterSchema(Schema):
                 raise ValidationError('Each skill filter must have operator')
             if 'value' not in skill_filter:
                 raise ValidationError('Each skill filter must have value')
-            
+
             operator = skill_filter.get('operator')
             if operator not in ['=', '>', '<', '>=', '<=', '!=']:
                 raise ValidationError(f'Invalid operator: {operator}')
-            
+
             value = skill_filter.get('value')
             if not isinstance(value, (int, float)) or value < 1 or value > 5:
                 raise ValidationError('Value must be a number between 1 and 5')
@@ -196,94 +208,50 @@ class NotificationSchema(Schema):
     user_id = fields.Integer(required=True)
 
 
-# Автоматические схемы для моделей
-class UserSchema(SQLAlchemyAutoSchema):
+# Простые схемы для моделей (без SQLAlchemyAutoSchema)
+class UserSchema(Schema):
     class Meta:
-        model = User
-        include_relationships = True
-        load_instance = True
-    
+        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'patronymic',
+                 'full_name', 'position', 'role', 'department_id', 'manager_id',
+                 'is_active', 'phone', 'created_at', 'updated_at')
+
     full_name = fields.String(dump_only=True)
-    password_hash = fields.String(load_only=True)
-    ratings = fields.Nested('UserSkillRatingSchema', many=True, exclude=('user',))
 
 
-class SkillSchema(SQLAlchemyAutoSchema):
+class SkillSchema(Schema):
     class Meta:
-        model = Skill
-        include_relationships = True
-        load_instance = True
-    
-    category = fields.Nested('SkillCategorySchema')
+        fields = ('id', 'name', 'description', 'category_id', 'is_active',
+                 'difficulty_level', 'created_at', 'updated_at')
 
 
-class SkillCategorySchema(SQLAlchemyAutoSchema):
+class SkillCategorySchema(Schema):
     class Meta:
-        model = SkillCategory
-        include_relationships = True
-        load_instance = True
-    
-    skills = fields.Nested('SkillSchema', many=True, exclude=('category',))
+        fields = ('id', 'name', 'description', 'icon', 'color', 'created_at', 'updated_at')
 
 
-class UserSkillRatingSchema(SQLAlchemyAutoSchema):
+class UserSkillRatingSchema(Schema):
     class Meta:
-        model = UserSkillRating
-        include_relationships = True
-        load_instance = True
-    
-    user = fields.Nested('UserSchema', exclude=('ratings',))
-    skill = fields.Nested('SkillSchema')
+        fields = ('id', 'user_id', 'skill_id', 'self_score', 'manager_score',
+                 'final_score', 'status', 'notes', 'manager_notes',
+                 'self_assessment_date', 'manager_assessment_date', 'created_at', 'updated_at')
+
     effective_score = fields.Integer(dump_only=True)
 
 
-class RatingHistorySchema(SQLAlchemyAutoSchema):
+class DepartmentSchema(Schema):
     class Meta:
-        model = RatingHistory
-        include_relationships = True
-        load_instance = True
-    
-    user = fields.Nested('UserSchema', exclude=('ratings', 'rating_history'))
-    changed_by = fields.Nested('UserSchema', exclude=('ratings', 'rating_history'))
+        fields = ('id', 'name', 'description', 'code', 'manager_id',
+                 'created_at', 'updated_at')
 
 
-class DepartmentSchema(SQLAlchemyAutoSchema):
+class NotificationSchema(Schema):
     class Meta:
-        model = Department
-        include_relationships = True
-        load_instance = True
-    
-    employees = fields.Nested('UserSchema', many=True, exclude=('department',))
-    manager = fields.Nested('UserSchema', exclude=('managed_department',))
-    required_skills = fields.Nested('RequiredDepartmentSkillSchema', many=True)
+        fields = ('id', 'type', 'title', 'message', 'data', 'is_read',
+                 'user_id', 'sender_id', 'rating_id', 'created_at')
 
 
-class RequiredDepartmentSkillSchema(SQLAlchemyAutoSchema):
+class ReportSchema(Schema):
     class Meta:
-        model = RequiredDepartmentSkill
-        include_relationships = True
-        load_instance = True
-    
-    department = fields.Nested('DepartmentSchema', exclude=('required_skills',))
-    skill = fields.Nested('SkillSchema')
-
-
-class NotificationSchema(SQLAlchemyAutoSchema):
-    class Meta:
-        model = Notification
-        include_relationships = True
-        load_instance = True
-    
-    user = fields.Nested('UserSchema', exclude=('notifications',))
-    sender = fields.Nested('UserSchema', exclude=('notifications',))
-    rating = fields.Nested('UserSkillRatingSchema')
-
-
-class ReportSchema(SQLAlchemyAutoSchema):
-    class Meta:
-        model = Report
-        include_relationships = True
-        load_instance = True
-    
-    creator = fields.Nested('UserSchema')
-    department = fields.Nested('DepartmentSchema')
+        fields = ('id', 'type', 'name', 'description', 'parameters', 'file_url',
+                 'file_format', 'status', 'created_by', 'department_id',
+                 'created_at', 'updated_at')
