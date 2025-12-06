@@ -3,13 +3,21 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import func, case, desc, asc
 from datetime import datetime, timedelta
 import json
+from app.schemas import LoginSchema, UserCreateSchema
 
 from ..models import db, User, Skill, SkillCategory, UserSkillRating, RatingHistory, RequiredDepartmentSkill, Notification
 from ..schemas import RatingCreateSchema, BulkRatingUpdateSchema
 from ..services.rating_service import RatingService
 from ..services.skill_service import SkillService
-from ..utils.notifications import send_notification
+# Вместо send_notification используйте create_notification
+from ..utils.notifications import create_notification
 
+# Или если нужно несколько функций:
+from ..utils.notifications import (
+    create_notification,
+    send_rating_confirmation_notification,
+    send_new_assessment_notification
+)
 employee_bp = Blueprint('employee', __name__)
 rating_service = RatingService()
 skill_service = SkillService()

@@ -8,8 +8,10 @@ from flask_jwt_extended import (
 )
 from ..models import db, User, AuditLog
 from ..schemas import LoginSchema, UserCreateSchema
+from app.schemas import LoginSchema, UserCreateSchema
 from ..utils.auth_utils import hash_password, verify_password
 from ..services.user_service import UserService
+from ..utils.validation import validate_input
 
 auth_bp = Blueprint('auth', __name__)
 user_service = UserService()

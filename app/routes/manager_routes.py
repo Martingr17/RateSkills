@@ -7,8 +7,15 @@ from ..models import db, User, Department, Skill, UserSkillRating, RatingHistory
 from ..schemas import RatingUpdateSchema, EmployeeFilterSchema, ComparisonRequestSchema
 from ..services.rating_service import RatingService
 from ..services.user_service import UserService
-from ..utils.notifications import send_notification
+# Вместо send_notification используйте create_notification
+from ..utils.notifications import create_notification
 
+# Или если нужно несколько функций:
+from ..utils.notifications import (
+    create_notification,
+    send_rating_confirmation_notification,
+    send_new_assessment_notification
+)
 manager_bp = Blueprint('manager', __name__)
 rating_service = RatingService()
 user_service = UserService()
