@@ -1,4 +1,4 @@
-# Skill Matrix Backend System
+# Skill Matrix
 
 Полная система оценки компетенций сотрудников с ролевой моделью: Сотрудник, Руководитель, Администратор.
 
@@ -27,3 +27,4 @@
 - **Миграции**: Flask-Migrate
 - **Экспорт**: Pandas, OpenPyXL
 - **Контейнеризация**: Docker, Docker Compose
+
