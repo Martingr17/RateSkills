@@ -2998,5 +2998,209 @@
         // Uncomment the line below to start with a logged-in user for demo purposes
         // setTimeout(() => login('demo_user', 'employee'), 100);
     </script>
+
+<!-- BEGIN: backend-integration -->
+<script>
+(async function(){
+  const TOKEN_KEY = 'access_token';
+
+  function getToken(){ return localStorage.getItem(TOKEN_KEY); }
+  function setToken(t){ if(t) localStorage.setItem(TOKEN_KEY,t); else localStorage.removeItem(TOKEN_KEY); }
+
+  async function apiFetch(path, opts={}){
+    const headers = opts.headers || {};
+    headers['Accept']='application/json';
+    if(!opts.headers) opts.headers = headers;
+    const token = getToken();
+    if(token){
+      opts.headers['Authorization'] = 'Bearer ' + token;
+    }
+    try{
+      const resp = await fetch(path, opts);
+      if(resp.status===401){
+        // token invalid or expired
+        logoutWithMessage('Срок действия сессии истёк, пожалуйста, войдите снова.');
+        throw new Error('Unauthorized');
+      }
+      const data = await resp.json().catch(()=>null);
+      if(!resp.ok){
+        const err = (data && (data.message||data.error)) || ('HTTP '+resp.status);
+        throw new Error(err);
+      }
+      return data;
+    }catch(e){
+      console.warn('apiFetch error', e);
+      throw e;
+    }
+  }
+
+  async function tryFetchEmployees(){
+    const tryPaths = ['/api/admin/users','/api/manager/subordinates','/api/employee/list','/api/employee/dashboard'];
+    for(const p of tryPaths){
+      try{
+        const d = await apiFetch(p, {method:'GET'});
+        if(Array.isArray(d) && d.length) return d;
+        if(d && Array.isArray(d.users)) return d.users;
+        if(d && Array.isArray(d.employees)) return d.employees;
+      }catch(e){
+        // skip
+      }
+    }
+    return null;
+  }
+
+  async function tryFetchSkills(){
+    const tryPaths = ['/api/skills','/api/skills/list','/api/employee/skills'];
+    for(const p of tryPaths){
+      try{
+        const d = await apiFetch(p, {method:'GET'});
+        if(d && Array.isArray(d.skills)) return d.skills;
+        if(Array.isArray(d)) return d;
+      }catch(e){}
+    }
+    return null;
+  }
+
+  async function tryFetchCategories(){
+    const tryPaths = ['/api/skills/categories','/api/skills/categories/list','/api/skills/categories'];
+    for(const p of tryPaths){
+      try{
+        const d = await apiFetch(p, {method:'GET'});
+        if(d && Array.isArray(d.categories)) return d.categories;
+        if(Array.isArray(d)) return d;
+      }catch(e){}
+    }
+    return null;
+  }
+
+  async function syncMockDataFromApi(){
+    try{
+      const [cats, skills, employees] = await Promise.all([
+        tryFetchCategories(), tryFetchSkills(), tryFetchEmployees()
+      ]);
+      if(cats) mockData.categories = cats.map(c=>({
+        id: c.id, name: c.name, icon: c.icon || 'fa-layer-group', description: c.description || '', skillCount: c.skill_count || (c.skills?c.skills.length:0)
+      }));
+      if(skills) mockData.skills = skills.map(s=>({
+        id: s.id, name: s.name, categoryId: s.category_id || s.categoryId || (s.category && s.category.id), description: s.description || ''
+      }));
+      if(employees) mockData.employees = employees.map(u=>({
+        id: u.id, name: u.name || u.full_name || u.username, position: u.position || u.title || '', department: u.department || (u.department&&u.department.name) || '—',
+        skills: (u.skills || []).map(rs => ({ skillId: rs.skill_id || rs.skillId || rs.skillId, rating: rs.rating || rs.value || 0, confirmed: !!rs.confirmed }))
+      }));
+      console.info('mockData synced from API');
+    }catch(e){
+      console.info('Could not sync mockData from API:', e.message);
+    }
+  }
+
+  function logoutWithMessage(msg){
+    try{ setToken(null); }catch(e){}
+    alert(msg || 'Выполнен выход');
+    // call existing logout
+    try{ logout(); }catch(e){}
+  }
+
+  // override login behavior to call backend
+  const loginForm = document.getElementById('login-form');
+  if(loginForm){
+    loginForm.addEventListener('submit', async function(ev){
+      ev.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      if(!username || !password){
+        document.getElementById('login-error').textContent = 'Введите логин и пароль';
+        document.getElementById('login-error').style.display='block';
+        setTimeout(()=>document.getElementById('login-error').style.display='none',3000);
+        return;
+      }
+      try{
+        const resp = await fetch('/api/auth/login',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','Accept':'application/json'},
+          body: JSON.stringify({username, password})
+        });
+        const data = await resp.json().catch(()=>null);
+        if(!resp.ok){
+          const msg = data && (data.message||data.error) || 'Ошибка авторизации';
+          document.getElementById('login-error').textContent = msg;
+          document.getElementById('login-error').style.display='block';
+          setTimeout(()=>document.getElementById('login-error').style.display='none',5000);
+          return;
+        }
+        const token = data.access_token || data.token || data.jwt;
+        if(!token){
+          // maybe server returns tokens under different key
+          console.warn('No token in login response', data);
+        }else{
+          setToken(token);
+        }
+        // fetch current user
+        let me = null;
+        try{
+          const meResp = await apiFetch('/api/auth/me', {method:'GET'});
+          me = meResp && (meResp.user || meResp);
+        }catch(e){
+          console.warn('Could not fetch /api/auth/me:', e.message);
+        }
+        // if server returned user in login response, use it
+        if(!me && data.user) me = data.user;
+        // fallback set role detection
+        let role = 'employee';
+        if(me){
+          role = me.role || me.roles && me.roles[0] || (me.is_admin? 'admin' : (me.is_manager? 'manager':'employee'));
+        }else{
+          // detect by username heuristics as before
+          if(username.includes('manager')) role='manager';
+          if(username.includes('admin')) role='admin';
+        }
+        // sync mock data with api where possible
+        await syncMockDataFromApi();
+        // call existing login() to switch UI
+        try{
+          login(username, role);
+        }catch(e){
+          // fallback: manually toggle UI
+          document.getElementById('login-page').classList.add('d-none');
+          document.getElementById('app').classList.remove('d-none');
+        }
+      }catch(err){
+        console.error(err);
+        document.getElementById('login-error').textContent = 'Сетевая ошибка';
+        document.getElementById('login-error').style.display='block';
+        setTimeout(()=>document.getElementById('login-error').style.display='none',3000);
+      }
+    });
+  }
+
+  // If token already present, attempt to restore session and sync data
+  if(getToken()){
+    try{
+      const meResp = await apiFetch('/api/auth/me', {method:'GET'});
+      const me = meResp && (meResp.user || meResp);
+      const role = me && (me.role || me.roles && me.roles[0]) || 'employee';
+      // sync mockData
+      await syncMockDataFromApi();
+      // set currentUser and open app view
+      try{
+        currentUser = { username: me && (me.username || me.name) || 'user', role };
+        currentRole = role;
+        document.getElementById('login-page').classList.add('d-none');
+        document.getElementById('app').classList.remove('d-none');
+        updateUserInfo();
+        updateNavigation();
+        navigateTo('home');
+      }catch(e){}
+    }catch(e){
+      console.warn('Restoring session failed', e.message);
+      // clear token if invalid
+      setToken(null);
+    }
+  }
+
+})();
+</script>
+<!-- END: backend-integration -->
+
 </body>
 </html>
