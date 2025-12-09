@@ -1,24 +1,18 @@
+# Dockerfile в корне проекта
 FROM python:3.11-slim
 
-WORKDIR /app
+# Создаем рабочую директорию
+WORKDIR /code
 
-# Установка системных зависимостей
-RUN apt-get update && apt-get install -y \
-    gcc \
-    postgresql-client \
-    && rm -rf /var/lib/apt/lists/*
-
-# Копирование requirements
+# Копируем зависимости
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копирование приложения
-COPY . .
+# Копируем приложение
+COPY app/ /code/app/
 
-# Создание пользователя
-RUN useradd -m -u 1000 skilluser && chown -R skilluser:skilluser /app
-USER skilluser
+# Устанавливаем PYTHONPATH
+ENV PYTHONPATH=/code
 
-EXPOSE 5000
-
-CMD ["python", "run.py"]
+# Запускаем
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
